@@ -1,12 +1,13 @@
 #include "banking.h"
 #include "account.h"
+#include "priority_queue.h" 
 #include <stdio.h>
 #include <string.h>
 
 void checkLoanEligibility() {
     int id;
     double requiredMinBalance = 5000.00; 
-    int requiredMinCibil = 700;          
+    int requiredMinCibil = 700;           
     
     printf("\n-- LOAN ELIGIBILITY CHECK --\n");
     printf("Enter Account ID: ");
@@ -24,12 +25,27 @@ void checkLoanEligibility() {
     printf("Balance: $%.2lf (Required: $%.2lf)\n", balance, requiredMinBalance);
 
     if (cibil >= requiredMinCibil && balance >= requiredMinBalance) {
-        printf("STATUS: ELIGIBLE! The applicant meets the minimum criteria.\n");
-        printf("Next step would be to add them to the Priority Queue (Module 7).\n");
+        
+        // --- LOAN PRIORITY CALCULATION (M6) ---
+        // Priority Score = CIBIL Score + (Balance / 100)
+        double priorityScore = (double)cibil + (balance / 100.0);
+
+        printf("STATUS: ELIGIBLE! Priority Score calculated: %.2lf\n", priorityScore);
+        enqueueApplicant(id, accNode->data.name, priorityScore);
+        
     } else {
         printf("STATUS: INELIGIBLE. Criteria not met.\n");
     }
 }
+
+/**
+ * @brief Processes the next loan application using the Max Heap.
+ * (M6: Loan Applicant Ranking)
+ */
+void processNextLoanApplication() {
+    dequeueHighestPriority();
+}
+
 
 void handleDeposit() {
     int id; double amount;
