@@ -7,6 +7,20 @@
 #include "account.h"
 #include "banking.h"
 #include "queue.h"
+#include "bst.h"
+#include "file_handler.h"
+#include "priority_queue.h" 
+
+// Definition of the processing function for inorderTraversal in displayAllAccounts
+static void printAccountDetails(AccountNode* node) {
+    if (node != NULL) {
+        printf("%-6d | %-23s | $%-9.2lf | %d\n",
+               node->data.accountID, 
+               node->data.name, 
+               node->data.balance,
+               node->data.cibilScore);
+    }
+}
 
 void clear_input_buffer() {
     int c;
@@ -17,17 +31,22 @@ void handleCreateAccountFromMenu() {
     int id; int cibil_assigned; double balance; char name[50]; char phone[15]; char address[100];
     printf("\n-- CREATE ACCOUNT (M2) --\n");
     printf("Enter New Account ID: "); 
-    if (scanf("%d", &id) != 1) { printf("Invalid input.\n"); return; }
+    if (scanf("%d", &id) != 1) { printf("Invalid input.\n"); clear_input_buffer(); return; }
     
     cibil_assigned = (rand() % 251) + 600; 
     
     clear_input_buffer();
-    printf("Enter Customer Name (no spaces): "); if (scanf("%s", name) != 1) return;
-    printf("Enter Initial Balance: "); if (scanf("%lf", &balance) != 1) { printf("Invalid input.\n"); return; }
+    printf("Enter Customer Name (no spaces): "); 
+    if (scanf("%s", name) != 1) { clear_input_buffer(); return; }
+    printf("Enter Initial Balance: "); 
+    if (scanf("%lf", &balance) != 1) { printf("Invalid input.\n"); clear_input_buffer(); return; }
 
     clear_input_buffer();
-    printf("Enter Phone Number: "); if (fgets(phone, sizeof(phone), stdin) == NULL) return; phone[strcspn(phone, "\n")] = 0;
-    printf("Enter Address (no spaces): "); if (fgets(address, sizeof(address), stdin) == NULL) return; address[strcspn(address, "\n")] = 0;
+    printf("Enter Phone Number: "); 
+    if (fgets(phone, sizeof(phone), stdin) == NULL) return; phone[strcspn(phone, "\n")] = 0;
+    
+    printf("Enter Address (no spaces): "); 
+    if (fgets(address, sizeof(address), stdin) == NULL) return; address[strcspn(address, "\n")] = 0;
     
     createAccount(id, name, balance, cibil_assigned, phone, address); 
 }
@@ -36,13 +55,13 @@ void handleUpdateAccountDetails() {
     int id; char choice;
     printf("\n-- UPDATE ACCOUNT DETAILS --\n");
     printf("Enter Account ID to modify: ");
-    if (scanf("%d", &id) != 1) { printf("Invalid input.\n"); return; }
+    if (scanf("%d", &id) != 1) { printf("Invalid input.\n"); clear_input_buffer(); return; }
     AccountNode *accNode = findAccountNode(id);
     if (accNode == NULL) { printf("FAILURE: Account ID %d not found.\n", id); return; }
     printf("\nAccount found for %s. What would you like to update?\n", accNode->data.name);
     printf("A. Phone Number\nB. Address\nEnter choice (A/B): ");
     clear_input_buffer();
-    if (scanf(" %c", &choice) != 1) { printf("Invalid choice.\n"); return; }
+    if (scanf(" %c", &choice) != 1) { printf("Invalid choice.\n"); clear_input_buffer(); return; }
     clear_input_buffer();
     if (choice == 'A' || choice == 'a') {
         printf("Enter NEW Phone Number: ");
@@ -62,7 +81,7 @@ void handleUpdateAccountDetails() {
 void handleDisplayHistory() {
     int id;
     printf("\n-- DISPLAY TRANSACTION HISTORY (M3) --\n");
-    printf("Enter Account ID: "); if (scanf("%d", &id) != 1) { printf("Invalid input.\n"); return; }
+    printf("Enter Account ID: "); if (scanf("%d", &id) != 1) { printf("Invalid input.\n"); clear_input_buffer(); return; }
     AccountNode *accNode = findAccountNode(id);
     if (accNode == NULL) { printf("FAILURE: Account ID %d not found.\n", id); return; }
     
@@ -81,38 +100,32 @@ void handleDisplayHistory() {
 
 void displayAllAccounts() {
     printf("\n--- CUSTOMER ACCOUNT DATABASE (M2) ---\n");
-    AccountNode *current = head;
-    if (current == NULL) {
+    if (root == NULL) {
         printf("The database is currently empty.\n"); return;
     }
     printf("ID     | Name                    | Balance    | CIBIL\n");
     printf("-------|-------------------------|------------|-------\n");
-    while (current != NULL) {
-        printf("%-6d | %-23s | $%-9.2lf | %d\n",
-               current->data.accountID, 
-               current->data.name, 
-               current->data.balance,
-               current->data.cibilScore);
-        current = current->next;
-    }
+    // Traverse the BST to print accounts in ascending ID order
+    inorderTraversal(root, printAccountDetails);
     printf("---------------------------------------\n");
 }
 
 void printMenu() {
     printf("\n================================================\n");
-    printf("BANKING SYSTEM (Modules 1, 2, 3, 4, 6)\n");
+    printf("BANKING SYSTEM (Modules 1, 2(BST), 3, 4, 6(PQ), File)\n");
     printf("================================================\n");
-    printf("1. Create New Account (M2)\n");
-    printf("2. Deposit (M1)\n");
-    printf("3. Withdraw (M1)\n");
-    printf("4. Fund Transfer (M1)\n");
+    printf("1. Create New Account\n");
+    printf("2. Deposit\n");
+    printf("3. Withdraw\n");
+    printf("4. Fund Transfer\n");
     printf("5. View Transaction History (M3)\n");
-    printf("6. Submit Service Request (M4)\n");
-    printf("7. Process Next Service Request (M4)\n");
+    printf("6. Submit Service Request (M4 Queue)\n");
+    printf("7. Process Next Service Request (M4 Queue)\n");
     printf("8. Check Loan Eligibility (M6)\n");
-    printf("9. Update Account Details (M2 Enhancement)\n");
-    printf("10. Display All Accounts (M2)\n");
-    printf("0. Exit Program\n");
+    printf("9. Process Highest Priority Loan (M6 PQ)\n"); 
+    printf("10. Update Account Details (M2 Enhancement)\n");
+    printf("11. Display All Accounts (M2 BST)\n");
+    printf("0. Exit Program (SAVES Data)\n");
     printf("Enter your choice: ");
 }
 
@@ -120,7 +133,15 @@ int main() {
     int choice;
     srand(time(NULL)); 
     
-    printf("System Startup: Database is empty. Use Option 1 to create an account.\n");
+    initBST(); // Initialize the BST root
+    initPriorityQueue(); // NEW: Initialize the PQ
+    
+    if (loadAllAccounts()) {
+         printf("System Startup: Successfully loaded previous data or started fresh.\n");
+    } else {
+         printf("System Startup: FATAL ERROR during data load. Exiting.\n");
+         return 1;
+    }
     
     do {
         clear_input_buffer(); 
@@ -136,20 +157,19 @@ int main() {
             case 6: handleNewServiceRequest(); break;
             case 7: dequeueServiceRequest(); break;
             case 8: checkLoanEligibility(); break;
-            case 9: handleUpdateAccountDetails(); break;
-            case 10: displayAllAccounts(); break;
-            case 0: printf("\nExiting System. Cleaning up memory...\n"); break;
+            case 9: processNextLoanApplication(); break; 
+            case 10: handleUpdateAccountDetails(); break; // CORRECTED: Moved to 10
+            case 11: displayAllAccounts(); break;          // CORRECTED: Moved to 11
+            case 0: 
+                printf("\nExiting System. Saving data and cleaning up memory...\n"); 
+                saveAllAccounts(); 
+                break;
             default: printf("Invalid choice. Please enter a valid number.\n");
         }
     } while (choice != 0);
 
-    AccountNode *current = head;
-    AccountNode *next;
-    while (current != NULL) {
-        next = current->next;
-        if (current->data.history != NULL) free(current->data.history);
-        free(current);
-        current = next;
-    }
+    // Free all BST nodes and their associated history stacks before exiting
+    freeBST(root);
+
     return 0;
 }
