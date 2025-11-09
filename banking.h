@@ -6,5 +6,6 @@ void handleWithdrawal();
 void handleTransfer();
 
 void checkLoanEligibility();
+void processNextLoanApplication(); 
 
 #endif
