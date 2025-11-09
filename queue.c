@@ -4,13 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct ServiceQueue { 
-    ServiceRequest items[MAX_QUEUE]; 
-    int front; 
-    int rear; 
-    int count; 
-} ServiceQueue;
-
+// Global Queue Structure - Exported for report.c to read status
 ServiceQueue serviceQ = { .front = 0, .rear = -1, .count = 0 };
 
 void clear_input_buffer(); 
@@ -29,11 +23,14 @@ void handleNewServiceRequest() {
     details[strcspn(details, "\n")] = 0; 
     
     if (findAccountNode(id) == NULL) { printf("FAILURE: Account ID %d not found.\n", id); return; }
-    if (serviceQ.count == MAX_QUEUE) { printf("FAILURE: Queue full.\n"); return; }
+    
+    // Use MAX_QUEUE defined in queue.h
+    if (serviceQ.count == MAX_QUEUE) { printf("FAILURE: Queue full.\n"); return; } 
     
     serviceQ.rear = (serviceQ.rear + 1) % MAX_QUEUE;
     serviceQ.items[serviceQ.rear].accountID = id;
     strncpy(serviceQ.items[serviceQ.rear].details, details, sizeof(serviceQ.items[serviceQ.rear].details) - 1);
+    serviceQ.items[serviceQ.rear].details[sizeof(serviceQ.items[serviceQ.rear].details) - 1] = '\0';
     serviceQ.count++;
     printf("SUCCESS: Request submitted for ID %d.\n", id);
 }
