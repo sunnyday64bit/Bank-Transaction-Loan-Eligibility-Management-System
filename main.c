@@ -10,6 +10,10 @@
 #include "bst.h"
 #include "file_handler.h"
 #include "priority_queue.h" 
+#include "report.h" // <<< NEW HEADER ADDED
+
+// Global access to the BST root (must be declared external)
+extern AccountNode *root; 
 
 // Definition of the processing function for inorderTraversal in displayAllAccounts
 static void printAccountDetails(AccountNode* node) {
@@ -112,7 +116,7 @@ void displayAllAccounts() {
 
 void printMenu() {
     printf("\n================================================\n");
-    printf("BANKING SYSTEM (Modules 1, 2(BST), 3, 4, 6(PQ), File)\n");
+    printf("BANKING SYSTEM (Modules 1, 2(BST), 3, 4, 5, 6(PQ), File)\n");
     printf("================================================\n");
     printf("1. Create New Account\n");
     printf("2. Deposit\n");
@@ -125,6 +129,7 @@ void printMenu() {
     printf("9. Process Highest Priority Loan (M6 PQ)\n"); 
     printf("10. Update Account Details (M2 Enhancement)\n");
     printf("11. Display All Accounts (M2 BST)\n");
+    printf("12. Generate Executive Report (M5)\n"); // <<< NEW MENU ITEM
     printf("0. Exit Program (SAVES Data)\n");
     printf("Enter your choice: ");
 }
@@ -158,8 +163,9 @@ int main() {
             case 7: dequeueServiceRequest(); break;
             case 8: checkLoanEligibility(); break;
             case 9: processNextLoanApplication(); break; 
-            case 10: handleUpdateAccountDetails(); break; // CORRECTED: Moved to 10
-            case 11: displayAllAccounts(); break;          // CORRECTED: Moved to 11
+            case 10: handleUpdateAccountDetails(); break; 
+            case 11: displayAllAccounts(); break;          
+            case 12: generateSummaryReport(); break; // <<< NEW CASE
             case 0: 
                 printf("\nExiting System. Saving data and cleaning up memory...\n"); 
                 saveAllAccounts(); 
@@ -173,3 +179,4 @@ int main() {
 
     return 0;
 }
+```eof
